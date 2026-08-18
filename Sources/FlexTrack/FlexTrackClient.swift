@@ -25,6 +25,7 @@ public actor FlexTrackClient {
   public let queue: any EventQueue
   private let consentProvider: @Sendable () -> ConsentState
   private let onlineProvider: @Sendable () -> Bool
+  private let logger: FlexTrackLogger
   private var transformers: [EventTransformer] = []
   private var started = false
   private var flushing = false
@@ -35,13 +36,15 @@ public actor FlexTrackClient {
     registry: TrackerRegistry = TrackerRegistry(),
     queue: any EventQueue = InMemoryEventQueue(),
     consentProvider: @escaping @Sendable () -> ConsentState = { ConsentState() },
-    onlineProvider: @escaping @Sendable () -> Bool = { true }
+    onlineProvider: @escaping @Sendable () -> Bool = { true },
+    logger: FlexTrackLogger = .disabled
   ) {
     self.routingEngine = routingEngine
     self.registry = registry
     self.queue = queue
     self.consentProvider = consentProvider
     self.onlineProvider = onlineProvider
+    self.logger = logger
   }
 
   public func register(_ tracker: any Tracker) async throws {
@@ -73,8 +76,10 @@ public actor FlexTrackClient {
       availableTrackerIDs: Set(trackers.keys)
     )
     let targets = routing.targetTrackerIDs
+    logger.log("🟣 ROUTE \(processed.name) targets=\(targets) properties=\(processed.properties)")
     if !onlineProvider(), !targets.isEmpty {
       try await queue.enqueue(QueuedEvent(event: processed, trackerIDs: targets))
+      logger.log("🟠 QUEUED \(processed.name) targets=\(targets) reason=offline")
       return DispatchResult(
         event: processed,
         routing: routing,
@@ -91,6 +96,7 @@ public actor FlexTrackClient {
     let failedIDs = failures.map(\.trackerID)
     if !failedIDs.isEmpty {
       try await queue.enqueue(QueuedEvent(event: processed, trackerIDs: failedIDs))
+      logger.log("🟠 QUEUED \(processed.name) targets=\(failedIDs) reason=delivery_failure")
     }
     return DispatchResult(
       event: processed,
@@ -106,6 +112,7 @@ public actor FlexTrackClient {
     await acquireFlushLock()
     defer { releaseFlushLock() }
     guard onlineProvider() else {
+      logger.log("⚪ OFFLINE flush skipped")
       return FlushResult(
         attemptedEvents: 0, deliveredEvents: 0, remainingEvents: await queue.size())
     }
@@ -154,7 +161,8 @@ public actor FlexTrackClient {
     to trackerIDs: [String],
     trackers: [String: any Tracker]
   ) async -> [Outcome] {
-    await withTaskGroup(of: Outcome.self) { group in
+    let deliveryLogger = logger
+    return await withTaskGroup(of: Outcome.self) { group in
       for (index, trackerID) in trackerIDs.enumerated() {
         group.addTask {
           guard let tracker = trackers[trackerID] else {
@@ -164,8 +172,10 @@ public actor FlexTrackClient {
           }
           do {
             try await tracker.track(event)
+            deliveryLogger.log("🟢 DELIVER \(event.name) target=\(trackerID)")
             return Outcome(index: index, trackerID: trackerID, error: nil)
           } catch {
+            deliveryLogger.log("🔴 FAILED \(event.name) target=\(trackerID) error=\(error)")
             return Outcome(index: index, trackerID: trackerID, error: error)
           }
         }

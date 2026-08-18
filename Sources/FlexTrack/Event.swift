@@ -46,6 +46,7 @@ public struct FlexEvent: Sendable, Codable, Equatable {
   public let category: String?
   public let containsPII: Bool
   public let requiresConsent: Bool
+  public let isHighVolume: Bool
   public let isEssential: Bool
   public let userID: String?
   public let sessionID: String?
@@ -58,6 +59,7 @@ public struct FlexEvent: Sendable, Codable, Equatable {
     category: String? = nil,
     containsPII: Bool = false,
     requiresConsent: Bool = true,
+    isHighVolume: Bool = false,
     isEssential: Bool = false,
     userID: String? = nil,
     sessionID: String? = nil
@@ -71,6 +73,7 @@ public struct FlexEvent: Sendable, Codable, Equatable {
     self.category = category
     self.containsPII = containsPII
     self.requiresConsent = requiresConsent
+    self.isHighVolume = isHighVolume
     self.isEssential = isEssential
     self.userID = userID
     self.sessionID = sessionID
@@ -85,6 +88,7 @@ public struct FlexEvent: Sendable, Codable, Equatable {
       category: category,
       containsPII: containsPII,
       requiresConsent: requiresConsent,
+      isHighVolume: isHighVolume,
       isEssential: isEssential,
       userID: userID,
       sessionID: sessionID

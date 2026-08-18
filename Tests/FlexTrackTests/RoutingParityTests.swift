@@ -128,6 +128,32 @@ struct RoutingParityTests {
     #expect(unavailable.warnings == ["Rule resolved to no available trackers"])
   }
 
+  @Test("debug explains every failed condition")
+  func debugReasons() throws {
+    let rule = RoutingRule(
+      id: "diagnostic", targetGroup: analytics, nameRegex: "^logout$",
+      category: "security", propertyName: "reason", requireConsent: false)
+    let engine = makeEngine([rule])
+
+    let decision = try #require(engine.debug(
+      FlexEvent(name: "purchase", category: "business", requiresConsent: false),
+      availableTrackerIDs: ["analytics"]
+    ).decisions.first)
+
+    #expect(decision.reason?.contains("does not match /^logout$/") == true)
+    #expect(decision.reason?.contains("Category mismatch") == true)
+    #expect(decision.reason?.contains("Missing property 'reason'") == true)
+  }
+
+  @Test("engine exposes configuration validation")
+  func validation() {
+    let engine = makeEngine([
+      RoutingRule(id: "duplicate", targetGroup: analytics, isDefault: true),
+      RoutingRule(id: "duplicate", targetGroup: analytics),
+    ])
+    #expect(engine.validateConfiguration().first?.contains("Duplicate rule IDs") == true)
+  }
+
   private func makeEngine(_ rules: [RoutingRule]) -> RoutingEngine {
     RoutingEngine(RoutingConfiguration(rules: rules))
   }
