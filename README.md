@@ -113,3 +113,7 @@ clears captured events.
 Every tracker declares `TrackerCapabilities`; `tracker.diagnostics()` and
 `registry.diagnostics()` expose typed lifecycle and delivery-count snapshots
 for developer tooling without logging event payloads.
+
+## License
+
+FlexTrack Swift is available under the MIT License. See [LICENSE](LICENSE).
