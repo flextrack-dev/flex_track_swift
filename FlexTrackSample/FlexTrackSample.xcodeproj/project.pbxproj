@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9976172D3034729100BC7C5A /* FlexTrack in Frameworks */ = {isa = PBXBuildFile; productRef = 9976172C3034729100BC7C5A /* FlexTrack */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9976170F3034724800BC7C5A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9976172D3034729100BC7C5A /* FlexTrack in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = FlexTrackSample;
 			packageProductDependencies = (
+				9976172C3034729100BC7C5A /* FlexTrack */,
 			);
 			productName = FlexTrackSample;
 			productReference = 997617013034724100BC7C5A /* FlexTrackSample.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 997616F83034724100BC7C5A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9976172B3034729100BC7C5A /* XCLocalSwiftPackageReference "../../FlexTrack" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 997617023034724100BC7C5A /* Products */;
 			projectDirPath = "";
@@ -321,7 +330,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -378,7 +387,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -457,7 +466,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.flextrack.FlexTrackSampleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -478,7 +487,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.flextrack.FlexTrackSampleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -570,6 +579,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		9976172B3034729100BC7C5A /* XCLocalSwiftPackageReference "../../FlexTrack" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../FlexTrack;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9976172C3034729100BC7C5A /* FlexTrack */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FlexTrack;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 997616F93034724100BC7C5A /* Project object */;
 }

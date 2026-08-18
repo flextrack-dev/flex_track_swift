@@ -63,7 +63,7 @@ struct CoreTests {
     )
 
     #expect(result.targetTrackerIDs.isEmpty)
-    #expect(result.skippedRules.first?.reason == "General consent is required")
+    #expect(result.skippedRules.first?.reason == "Consent requirements not met")
   }
 
   @Test("sampling is deterministic for the same stable key")

@@ -59,7 +59,7 @@ public struct RoutingRule: Sendable {
     if isDefault { return true }
     if let nameContains, !event.name.contains(nameContains) { return false }
     if let category, event.category != category { return false }
-    return nameContains != nil || category != nil
+    return true
   }
 }
 
@@ -128,15 +128,16 @@ public struct RoutingEngine: Sendable {
         !consent.general,
         !event.isEssential
       {
-        skipped.append(SkippedRule(ruleID: rule.id, reason: "General consent is required"))
+        skipped.append(SkippedRule(ruleID: rule.id, reason: "Consent requirements not met"))
         continue
       }
       if configuration.consentCheckingEnabled,
         rule.requirePIIConsent,
         event.containsPII,
-        !consent.pii
+        !consent.pii,
+        !event.isEssential
       {
-        skipped.append(SkippedRule(ruleID: rule.id, reason: "PII consent is required"))
+        skipped.append(SkippedRule(ruleID: rule.id, reason: "Consent requirements not met"))
         continue
       }
       if configuration.samplingEnabled,
@@ -150,8 +151,7 @@ public struct RoutingEngine: Sendable {
       applied.append(rule.priority)
     }
     let uniqueTargets = targets.uniqued()
-    let warning =
-      effectiveRules.isEmpty || (!targets.isEmpty && uniqueTargets.isEmpty)
+    let warning = effectiveRules.isEmpty || (!applied.isEmpty && uniqueTargets.isEmpty)
       ? ["Rule resolved to no available trackers"] : []
     return RoutingResult(
       targetTrackerIDs: uniqueTargets,
@@ -163,15 +163,20 @@ public struct RoutingEngine: Sendable {
 }
 
 public enum DeterministicSampler {
+  public static func stableHash(_ value: String) -> UInt32 {
+    var hash: UInt32 = 2_166_136_261
+    for byte in value.utf8 {
+      hash ^= UInt32(byte)
+      hash = hash &* 16_777_619
+    }
+    return hash
+  }
+
   public static func includes(event: FlexEvent, rate: Double) -> Bool {
     if rate >= 1 { return true }
     if rate <= 0 { return false }
     let key = event.userID ?? event.sessionID ?? event.name
-    var hash: UInt32 = 2_166_136_261
-    for byte in key.utf8 {
-      hash ^= UInt32(byte)
-      hash = hash &* 16_777_619
-    }
+    let hash = stableHash(key)
     return Double(hash) / Double(UInt32.max) < rate
   }
 }
