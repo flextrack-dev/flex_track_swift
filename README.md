@@ -23,23 +23,18 @@ import FlexTrack
 
 ```swift
 let tracker = MyTracker()
-let routing = RoutingEngine(
-    RoutingConfiguration(rules: [
-        RoutingRule(
-            id: "default",
-            targetGroup: TrackerGroup("analytics", trackerIDs: [tracker.id]),
-            nameContains: "purchase",
-            requireConsent: true
-        )
-    ])
-)
-
-let client = FlexTrackClient(
-    routingEngine: routing,
-    consentProvider: { ConsentState(general: true) }
-)
-try await client.register(tracker)
-try await client.start()
+let client = try await FlexTrackBuilder()
+    .tracker(tracker)
+    .consent { ConsentState(general: true) }
+    .debugLogging()
+    .routing {
+        try $0.defineGroup("product", trackerIDs: [tracker.id])
+            .routeNamed("purchase") {
+                try $0.toGroup(named: "product").id("purchase-route")
+            }
+            .routeDefault { $0.toAll() }
+    }
+    .build()
 
 let result = try await client.track(
     FlexEvent(
@@ -47,6 +42,25 @@ let result = try await client.track(
         properties: ["plan": .string("pro")]
     )
 )
+```
+
+Use a dynamic tracking context when versioned consent and user/session
+enrichment should be configured together:
+
+```swift
+let consent = ConsentManager()
+consent.setConsents(general: true, analytics: true, version: "2026-08")
+let context = TrackingContext(
+    userID: "user-42",
+    sessionID: "session-7",
+    consentManager: consent
+)
+
+let client = try await FlexTrackBuilder()
+    .tracker(MyTracker())
+    .trackingContext { context }
+    .routing { try $0.routeDefault { $0.toAll() } }
+    .build()
 ```
 
 `Tracker` implementations are isolated from each other. Failed destinations
@@ -61,11 +75,12 @@ the host application:
 let queue = try FileEventQueue(
     fileURL: applicationSupportURL.appendingPathComponent("flextrack-queue.json")
 )
-let client = FlexTrackClient(
-    routingEngine: routing,
-    queue: queue,
-    onlineProvider: { networkMonitor.isOnline }
-)
+let client = try await FlexTrackBuilder()
+    .tracker(MyTracker())
+    .queue(queue)
+    .network { networkMonitor.isOnline }
+    .routing { try $0.routeDefault { $0.toAll() } }
+    .build()
 ```
 
 Offline events retain their identity, timestamp, transformed properties, and
@@ -81,3 +96,20 @@ sampling checks, but never bypass a required PII-consent check.
 
 The language-neutral specifications and fixtures are vendored in `Contract/`.
 Changes to routing or runtime delivery must remain compatible with those files.
+
+## Public utilities
+
+`PatternMatcher`, `SamplingUtils`, and `ValidationUtils` provide the public
+Flutter-equivalent helpers with Swift-native types. Seeded random sampling is
+reproducible and deterministic sampling uses the shared FNV-1a contract.
+
+### Test trackers and health diagnostics
+
+Use the `RecordingTracker` actor (also available as `MockTracker`) in package
+or integration tests, and `NoOpTracker` when a configured destination must
+intentionally discard events. `events()` returns a value snapshot and `reset()`
+clears captured events.
+
+Every tracker declares `TrackerCapabilities`; `tracker.diagnostics()` and
+`registry.diagnostics()` expose typed lifecycle and delivery-count snapshots
+for developer tooling without logging event payloads.
